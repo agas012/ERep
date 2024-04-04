@@ -1,0 +1,101 @@
+﻿@page "/csr"
+@page "/csr/{id:int}"
+@inject ERep.Data.IPatientService PatientService
+@inject NavigationManager NavigationManager
+
+<h3>Cuestionario de salud reproductiva CEER</h3>
+
+@if (Id == null)
+{
+        <PageTitle>Crear un nuevo paciente</PageTitle>
+        <h3>Crear un nuevo paciente</h3>
+}
+else
+{
+    <PageTitle>Editar @patient.Iniciales @patient.Folio @patient.ECU</PageTitle>
+    <h3>Paciente: @patient.Iniciales, Folio: @patient.Folio @patient.ECU</h3>
+}
+
+@if (PatientService.Patients == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <RadzenDataGrid Data="@patient.CSRs" TItem="ERep.Models.CSR" AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Simple" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or">
+        <Columns>
+            <RadzenDataGridColumn TItem="ERep.Models.CSR" Property="Date" Title="Fecha" Filterable="true" Width="80px" TextAlign="TextAlign.Center" Frozen="false" Type="typeof(DateTime)">
+                <Template Context="data">
+                    @data.Date.ToShortDateString()
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ERep.Models.CSR" Context="data" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="20px" Frozen="true">
+                <Template Context="data">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(() => ShowData(data.Id))">
+                    </RadzenButton>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>    
+    <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancel" Click="@Cancel" />
+    <RadzenButton Icon="list" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(CreateCita) Text="Dar de alta cita" Style="width:200px" TextAlign="TextAlign.Center"/>
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    ERep.Models.Patient patient = new ERep.Models.Patient();
+
+    string btnText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Guardar nuevo paciente" : "Actualizar paciente";
+        await PatientService.LoadPatients();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            patient.State = PatientService.States[0];
+            patient.StateId = patient.State.Id;
+        }
+        else
+        {
+            patient = await PatientService.GetSinglePatient((int)Id);
+            int a = 0;
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (Id == null)
+        {
+            await PatientService.CreatePatient(patient);
+        }
+        else
+        {
+            await PatientService.UpdatePatient(patient, patient.Id);
+        }
+    }
+
+    async Task DeletePatient()
+    {
+        await PatientService.DeletePatient(patient.Id);
+    }
+
+    void ShowData(int id)
+    {
+        NavigationManager.NavigateTo($"CSRId/{patient.Id}/{id}");
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"patient/{patient.Id}");
+    }
+    void CreateCita()
+    {
+        NavigationManager.NavigateTo($"CSRId/{patient.Id}/");
+    }
+}

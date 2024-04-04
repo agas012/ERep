@@ -1,0 +1,1898 @@
+﻿@page "/csrId/{Id:int}"
+@page "/csrId/{Id:int}/{Idc:int}"
+@using Microsoft.AspNetCore.Http.Features;
+@inject ERep.Data.IPatientService PatientService
+@inject NavigationManager NavigationManager
+
+<style>
+    .fixed-button-borrar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 10px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+    .fixed-button-cancelar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 150px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+    .fixed-button-guardar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 300px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+</style>
+
+<RadzenTemplateForm Data=@crs TItem="ERep.Models.CSR" Submit="@Onsubmit">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px;">
+                <RadzenButton Class="fixed-button-guardar" ButtonType="ButtonType.Submit" Icon="save" Text="Guardar" />
+                <RadzenButton Class="fixed-button-cancelar " ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancelar" Click="@Cancel" />
+                <RadzenButton Class="fixed-button-borrar" ButtonStyle="ButtonStyle.Warning" Icon="delete" style="display: inline-block; margin-left: 10px;" Text="Borrar" Click="@Delete" />
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">   
+            <div class="col-lg-6 col-xl-4 p-3">
+                <RadzenCard>
+                    <RadzenLabel Text="Fecha de encuesta" Component="Date" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenDatePicker @bind-Value=@crs.Date Name="Date" ShowTime="false" ShowSeconds="false" HoursStep="1.0" MinutesStep="5" SecondsStep="10" DateFormat="dd/MM/yyyy" Class="w-100" />
+                </RadzenCard>
+            </div>
+        </div>
+        <RadzenLabel Text="SECCIÓN 2: DATOS DE LA ENFERMEDAD" Size="H2" class="rz-card-title" />
+        <RadzenCard>
+            <div class="row justify-content-center">
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Enfermedad reumática previamente diagnosticada" Component="ereumatica" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                                @bind-Value="@crs.EreumaticaId"
+                                Data="@crs.Ereumatica"
+                                Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+                    @if (crs.EreumaticaId==12)
+                    {
+                         <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenCard>
+                                <RadzenTextBox Placeholder="escribir cual" @bind-Value="@crs.otraEreumatica"/>
+                            </RadzenCard>
+                        </div> 
+                    }
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Escriba cuándo iniciaron sus síntomas?" Component="DateSintomas" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDatePicker @bind-Value=@crs.DateSintomas Name="DateSintomas" ShowTime="false" ShowSeconds="false" HoursStep="1.0" MinutesStep="5" SecondsStep="10" DateFormat="dd/MM/yyyy" Class="w-100" />
+                    </RadzenCard>
+                </div>  
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Enqué fecha su reumatólogo le dio un diagnóstico?" Component="DateDiagnostico" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDatePicker @bind-Value=@crs.DateDiagnostico Name="DateDiagnostico" ShowTime="false" ShowSeconds="false" HoursStep="1.0" MinutesStep="5" SecondsStep="10" DateFormat="dd/MM/yyyy" Class="w-100" />
+                    </RadzenCard>
+                </div> 
+            </div>
+            <div class="row justify-content-center">
+	                <RadzenCard>
+		                <RadzenLabel Text="¿Actualmente ¿Toma alguno de estos medicamentos?" Size="H4" class="rz-card-title" /> 
+                        <p>
+		                    <RadzenLabel Text="(Se puede circular más de una respuesta)" />
+		                    <RadzenLabel Text="(Entre paréntesis puede ver los nombres comerciales más comunes)" />
+                        </p>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_1" Text="Metotrexato" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_1  Name="medicamento_1" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_2" Text="Mofetil micofenolato/Acido micofenólico	" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_2  Name="medicamento_2" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_3" Text="Ciclofosfamida (Genoxal)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_3  Name="medicamento_3" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_4" Text="Talidomida" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_4  Name="medicamento_4" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_5" Text="Leflunomida (Arava, Almura, Filarin o Galdione)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_5  Name="medicamento_5" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_6" Text="Sulfasalazina (Azulfidina)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_6  Name="medicamento_6" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_7" Text="Rituximab (Mabthera)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_7  Name="medicamento_7" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_8" Text="Belimumab (Benlystia)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_8  Name="medicamento_8" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_9" Text="Azatioprina (Inmuran o Azatrilem)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_9  Name="medicamento_9" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_10" Text="Cloroquina (Aralen)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_10  Name="medicamento_10" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_11" Text="Hidroxicloroquina (Plaquenil, Himanix o Himanex)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_11  Name="medicamento_11" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_12" Text="Prednisona (Meticorten o Deflazacort" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_12  Name="medicamento_12" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_13" Text="Tacrolimus (Prograf)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_13  Name="medicamento_13" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_14" Text="Ácido fólico (Folivital) " Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_14  Name="medicamento_14" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_15" Text="Vitamina D	" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_15  Name="medicamento_15" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_16" Text="Ninguno" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_16  Name="medicamento_16" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_17" Text="Antinflamatorios no esteroideos (AINES)" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_17  Name="medicamento_17" TValue="bool"/>
+		                </RadzenCard>
+		                <RadzenCard>
+			                <RadzenLabel Component="medicamento_otros" Text="Otros" Style="margin-left: 8px; vertical-align: middle;" />
+			                <RadzenCheckBox @bind-Value=@crs.medicamento_otros  Name="medicamento_otros" TValue="bool"/>
+		                </RadzenCard>		
+		                @if (crs.medicamento_otros)
+		                {
+			                <RadzenCard>	
+				                <RadzenTextBox @bind-Value="@crs.medicamento_otros_text" Style="width: 100%; margin-top: 10px;" Placeholder="Otros" />
+			                </RadzenCard>
+		                }
+	                </RadzenCard>
+            </div>
+        </RadzenCard>
+
+        @*Relación con su reumatólogo*@
+        <RadzenLabel Text="SECCIÓN 3: RELACIÓN CON SU REUMATÓLOGO" Size="H2" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Que tanta confianza tiene para hablar con su reumatólogo para comentarle sobre temas como planificación familiar (deseo de embarazo) y consejería sobre métodos anticonceptivos?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.reuma_confianzaplanificarfamiliaId"
+                                Data="@crs.NadaMucho"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Con que frecuencia ha recibido por parte de su reumatólogo consejería sobre planificación familiar (deseo de embarazo) y consejería sobre métodos anticonceptivos ?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.reuma_planificarfamiliaId"
+                                Data="@crs.NuncaSiempre"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Con que frecuencia su reumatólogo le ha dicho de los riesgos de embarazarse en este momento respecto a su enfermedad?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.reuma_riesembarazoId"
+                                Data="@crs.NuncaSiempre"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Con que frecuencia su reumatólogo le ha dicho de los riesgos de tomar algunos medicamentos durante el embarazo?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.reuma_riesgomedId"
+                                Data="@crs.NuncaSiempre"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+        </RadzenCard>
+
+
+        @*Sexualidads*@
+        <RadzenLabel Text="SECCIÓN 4: SEXUALIDAD" Size="H2" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Qué edad tenía usted cuando tuvo su primera relación sexual?" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.anticon_edadprimeraId"
+                                Data="@crs.anticon_edadprimera"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+            @if(crs.anticon_edadprimeraId!=4 )
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="En su primera relación sexual, ¿Qué fue lo que usted o su pareja hicieron o usaron para evitar un embarazo o una infección de transmisión sexual?" Size="H3" class="rz-card-title" />
+                    <p><RadzenLabel Text="marque los que usted considere" /></p>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_primerapro16" Text="No quiero responder" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_primerapro16 Name="anticon_primerapro16" TValue="bool" />
+                    </RadzenCard>
+                    @if (crs.anticon_primerapro16==false)
+                    {
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro1" Text="No usamos nada" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro1 Name="anticon_primerapro1" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro2" Text="Pastillas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro2 Name="anticon_primerapro2" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro3" Text="Inyecciones o ampolletas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro3 Name="anticon_primerapro3" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro4" Text="Implante anticonceptivo (subdérmico) o Norplant" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro4 Name="anticon_primerapro4" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro5" Text="Parche anticonceptivo" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro5 Name="anticon_primerapro5" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro6" Text="Anillo vaginal (NuvaRing)" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro6 Name="anticon_primerapro6" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro7" Text="DIU, dispositivo o aparato (de cobre)" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro7 Name="anticon_primerapro7" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro8" Text="DIU, dispositivo con levornogestrel (Mirena)" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro8 Name="anticon_primerapro8" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro9" Text="Condón o preservativo masculino" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro9 Name="anticon_primerapro9" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro10" Text="Condón o preservativo femenino" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro10 Name="anticon_primerapro10" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro11" Text="Óvulos, jaleas o espumas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro11 Name="anticon_primerapro11" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro12" Text="Ritmo, calendario, Billings o abstinencia periódica" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro12 Name="anticon_primerapro12" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro13" Text="Retiro o coito interrumpido" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro13 Name="anticon_primerapro13" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro14" Text="Píldora del día siguiente o anticoncepción de emergencia" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro14 Name="anticon_primerapro14" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenLabel Component="anticon_primerapro15" Text="Otro método" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenCheckBox @bind-Value=@crs.anticon_primerapro15 Name="anticon_primerapro15" TValue="bool" />
+                        </RadzenCard>
+                        <RadzenCard>
+                            @if (crs.anticon_primerapro15)
+                            {
+                                    <RadzenTextBox @bind-Value="@crs.anticon_primeraprototro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                            }
+                        </RadzenCard>
+                    }
+                </RadzenCard>
+                @if(crs.anticon_primerapro1)
+                {
+                     <RadzenCard>
+                        <RadzenLabel Text="¿Cuál fue la razón principal por la que usted o su pareja no hicieron o usaron algo para protegerse o evitar un embarazo?" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@crs.anticon_primerarazonId"
+                                        Data="@crs.anticon_primerarazon"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                        @if (crs.anticon_primerarazonId == 8)
+                        {
+                            <RadzenTextBox @bind-Value="@crs.anticon_primerarazonotro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                        }
+                    </RadzenCard>               
+                }
+                <RadzenLabel Text="¿Cuándo fue la última vez que usted tuvo relaciones sexuales?" Size="H3" class="rz-card-title" />
+                <div class="row justify-content-center">
+                    <RadzenCard>
+                        <RadzenLabel Text="Prefiere decir" Size="H4" />
+                        <RadzenCheckBox Text="Prefiere decir" @bind-Value="crs.ultimarelaciones_nodecir"></RadzenCheckBox>
+                    </RadzenCard>
+                </div>
+                <div class="row justify-content-center">
+                    <RadzenCard>
+                        <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenLabel Text="Días" Size="H4" Visible="@crs.ultimarelaciones_nodecir" />
+                            <RadzenNumeric @bind-Value=@crs.ultimarelaciones_dias Name="ultimarelaciones_dias" Visible="@crs.ultimarelaciones_nodecir" />
+                        </div>
+                        <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenLabel Text="Semanas" Size="H4" Visible="@crs.ultimarelaciones_nodecir" />
+                            <RadzenNumeric @bind-Value=@crs.ultimarelaciones_semanas Name="ultimarelaciones_semanas" Visible="@crs.ultimarelaciones_nodecir" />
+                        </div>
+                        <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenLabel Text="Meses" Size="H4" Visible="@crs.ultimarelaciones_nodecir" />
+                            <RadzenNumeric @bind-Value=@crs.ultimarelaciones_meses Name="ultimarelaciones_meses" Visible="@crs.ultimarelaciones_nodecir" />
+                        </div>
+                        <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenLabel Text="Años" Size="H4" Visible="@crs.ultimarelaciones_nodecir" />
+                            <RadzenNumeric @bind-Value=@crs.ultimarelaciones_anos Name="ultimarelaciones_anos" Visible="@crs.ultimarelaciones_nodecir" />
+                        </div>
+                    </RadzenCard>
+                </div>            
+            }
+
+            <RadzenCard>
+                <RadzenLabel Text="En los últimos 12 meses, ¿usted ha escuchado o visto información de métodos anticonceptivos en..." Size="H3" class="rz-card-title" />
+                <RadzenLabel Text="marque los que usted considere" />
+                <RadzenCard>
+                    <RadzenLabel Component="Radio" Text="Radio?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.Radio Name="Radio" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="Television" Text="Televisión?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.Television Name="Television" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="Periodico" Text="Periódico o revistas?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.Periodico Name="Periodico" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="Internet" Text="Internet?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.Internet Name="Internet" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="RedesSociales" Text="Redes sociales?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.RedesSociales Name="RedesSociales" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="Carteles" Text="Carteles, folletos o trípticos?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.Carteles Name="Carteles" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="Platicas" Text="Pláticas en centros de salud, hospitales o consultorios?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.Platicas Name="Platicas" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="otro_medio" Text="en algún otro medio o lugar? ¿Cuál?" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.otro_medio Name="otro_medio" TValue="bool" />
+                </RadzenCard>
+                @if (crs.otro_medio)
+                {
+                    <RadzenCard>
+                        <RadzenTextBox @bind-Value="@crs.otro_medio_text" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    </RadzenCard>
+                }
+            </RadzenCard>
+            @if (crs.RedesSociales)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cuáles?" Size="H3" class="rz-card-title" />
+                    <RadzenLabel Text="marque los que utilice" />
+                    <RadzenCard>
+                        <RadzenLabel Component="Facebook" Text="Facebook" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.Facebook Name="Facebook" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="Instagram" Text="Instagram" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.Instagram Name="Instagram" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="Twitter" Text="Twitter" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.Twitter Name="Twitter" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="WhatsApp" Text="WhatsApp" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.WhatsApp Name="WhatsApp" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="TikTok" Text="TikTok" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.TikTok Name="TikTok" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="otra_red" Text="Otra red, folletos o trípticos?" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.otra_red Name="otra_red" TValue="bool" />
+                    </RadzenCard>
+                    @if (crs.otra_red)
+                    {
+                        <RadzenCard>
+                            <RadzenTextBox @bind-Value="@crs.otra_red_text" Style="width: 100%; margin-top: 10px;" Placeholder="Otra" />
+                        </RadzenCard>
+                    }
+                </RadzenCard>
+            }
+            <RadzenCard>
+                <RadzenLabel Text="¿Hace cuánto tiempo tuvo usted su última regla (menstruación)?" Size="H3" class="rz-card-title" />
+                <div class="row justify-content-center">
+                    <RadzenCard>
+                        <RadzenLabel Text="Prefiere decir" Size="H4" />
+                        <RadzenCheckBox Text="Prefiere decir" @bind-Value="crs.ultimaregla_nodecir"></RadzenCheckBox>
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Text="Nunca ha menstruado" Size="H4" Visible="@crs.ultimaregla_nodecir" />
+                        <RadzenCheckBox Text="Nunca ha menstruado" @bind-Value="crs.ultimaregla_nohamestruado" Visible="@crs.ultimaregla_nodecir"></RadzenCheckBox>
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Text="No recuerdo" Size="H4" Visible="@crs.ultimaregla_nodecir" />
+                        <RadzenCheckBox Text="No recuerdo" @bind-Value="crs.ultimaregla_norecuerdo" Visible="@crs.ultimaregla_nodecir"></RadzenCheckBox>
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Text="Menopausia" Size="H4" Visible="@crs.ultimaregla_nodecir" />
+                        <RadzenCheckBox Text="Menopausia" @bind-Value="crs.ultimaregla_menopausia" Visible="@crs.ultimaregla_nodecir"></RadzenCheckBox>
+                    </RadzenCard>
+                </div>
+                @if (!crs.ultimaregla_nohamestruado && !crs.ultimaregla_norecuerdo && !crs.ultimaregla_menopausia)
+                {
+                    <div class="row justify-content-center">
+                        <RadzenCard>
+                            <div class="col-lg-6 col-xl-4 p-3">
+                                <RadzenLabel Text="Días" Size="H4" Visible="@crs.ultimaregla_nodecir" />
+                                <RadzenNumeric @bind-Value=@crs.ultimaregla_dias Name="ultimaregla_dias" Visible="@crs.ultimaregla_nodecir" />
+                            </div>
+                            <div class="col-lg-6 col-xl-4 p-3">
+                                <RadzenLabel Text="Semanas" Size="H4" Visible="@crs.ultimaregla_nodecir" />
+                                <RadzenNumeric @bind-Value=@crs.ultimaregla_semanas Name="ultimaregla_semanas" Visible="@crs.ultimaregla_nodecir" />
+                            </div>
+                            <div class="col-lg-6 col-xl-4 p-3">
+                                <RadzenLabel Text="Meses" Size="H4" Visible="@crs.ultimaregla_nodecir" />
+                                <RadzenNumeric @bind-Value=@crs.ultimaregla_meses Name="ultimaregla_meses" Visible="@crs.ultimaregla_nodecir" />
+                            </div>
+                            <div class="col-lg-6 col-xl-4 p-3">
+                                <RadzenLabel Text="Años" Size="H4" Visible="@crs.ultimaregla_nodecir" />
+                                <RadzenNumeric @bind-Value=@crs.ultimaregla_anos Name="ultimaregla_anos" Visible="@crs.ultimaregla_nodecir" />
+                            </div>
+                        </RadzenCard>
+                    </div>
+                }
+            </RadzenCard>
+        </RadzenCard>
+
+        @*Anticoncepción*@
+        <RadzenLabel Text="SECCIÓN 5: ANTICONCEPCIÓN" Size="H2" class="rz-card-title" />
+        <RadzenLabel Text="A continuación, le voy a preguntar sobre los métodos o medios que una pareja puede usar para evitar o retrasar un embarazo: " Size="H6" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Quisiera usted decirme que métodos conoce?" Size="H3" class="rz-card-title" />
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_a" Text="a. Operación femenina, Salpingoclasia o ligadura de trompas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_a Name="conoce_a" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_b" Text="b. Operación masculina o vasectomía" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_b Name="conoce_b" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_c" Text="c. Pastillas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_c Name="conoce_c" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_d" Text="d. Inyecciones o ampolletas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_d Name="conoce_d" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_e" Text="e. Implante anticonceptivo (subdérmico) o Norplant" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_e Name="conoce_e" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_f" Text="f. Parche anticonceptivo" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_f Name="conoce_f" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_g" Text="g. Anillo vaginal ( NuvaRing)" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_g Name="conoce_g" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_h" Text="h. DIU, dispositivo o aparato (de cobre)" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_h Name="conoce_h" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_i" Text="i. DIU, dispositivo con levornogestrel (Mirena)" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_i Name="conoce_i" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_j" Text="j. Condón o preservativo masculino" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_j Name="conoce_j" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_k" Text="k. Condón o preservativo femenino" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_k Name="conoce_k" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_l" Text="l. Óvulos, jaleas o espumas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_l Name="conoce_l" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_m" Text="m. Ritmo, calendario, Billings o abstinencia periódica" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_m Name="conoce_m" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_n" Text="n. Retiro o coito interrumpido" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_n Name="conoce_n" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="conoce_nn" Text="ñ. Píldora del día siguiente o anticoncepción de emergencia" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_conoce_nn Name="conoce_nn" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenTextBox @bind-Value="@crs.metodos_conoce_o" Style="width: 100%; margin-top: 10px;" Placeholder="o. Otros métodos. ¿Cuál?" />
+                </RadzenCard>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Cuál es su opinión sobre el funcionamiento de los siguientes métodos para evitar el embarazo?" Size="H3" class="rz-card-title" />
+                <RadzenLabel Text=", marque los que en su opinión funcionen" Size="H3" class="rz-card-title" />
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_a" Text="a. Operación femenina, Salpingoclasia o ligadura de trompas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_a Name="funciona_a" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_b" Text="b. Operación masculina o vasectomía" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_b Name="funciona_b" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_c" Text="c. Pastillas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_c Name="funciona_c" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_d" Text="d. Inyecciones o ampolletas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_d Name="funciona_d" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_e" Text="e. Implante anticonceptivo (subdérmico) o Norplant" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_e Name="funciona_e" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_f" Text="f. Parche anticonceptivo" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_f Name="funciona_f" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_g" Text="g. Anillo vaginal ( NuvaRing)" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_g Name="funciona_g" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_h" Text="h. DIU, dispositivo o aparato (de cobre)" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_h Name="funciona_h" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_i" Text="i. DIU, dispositivo con levornogestrel (Mirena)" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_i Name="funciona_i" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_j" Text="j. Condón o preservativo masculino" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_j Name="funciona_j" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_k" Text="k. Condón o preservativo femenino" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_k Name="funciona_k" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_l" Text="l. Óvulos, jaleas o espumas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_l Name="funciona_l" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_m" Text="m. Ritmo, calendario, Billings o abstinencia periódica" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_m Name="funciona_m" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_n" Text="n. Retiro o coito interrumpido" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_n Name="funciona_n" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Component="funciona_nn" Text="ñ. Píldora del día siguiente o anticoncepción de emergencia" Style="margin-left: 8px; vertical-align: middle;" />
+                    <RadzenCheckBox @bind-Value=@crs.metodos_funciona_nn Name="funciona_nn" TValue="bool" />
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenTextBox @bind-Value="@crs.metodos_funciona_o" Style="width: 100%; margin-top: 10px;" Placeholder="o. Otros métodos. ¿Cuál?" />
+                </RadzenCard>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Alguna vez usted o su pareja (formal u ocasional) han utilizado algún método para evitar el embarazo?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.anticon_histusoId"
+                                Data="@crs.SiNoP"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="¿Actualmente usted o su pareja (formal u ocasional) están utilizando algún método para evitar el embarazo?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.anticon_usoId"
+                                Data="@crs.SiNoP"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+            @if (crs.anticon_usoId == 1)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Qué está utilizando usted actualmente o su pareja (formal u ocasional) para no tener hijos(as)?" Size="H3" class="rz-card-title" />
+                    <RadzenLabel Text="marque los que en su opinión funcionen" Size="H3" class="rz-card-title" />
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_a" Text="a. Operación femenina, Salpingoclasia o ligadura de trompas" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_a Name="utiliza_a" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_b" Text="b. Operación masculina o vasectomía" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_b Name="utiliza_b" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_c" Text="c. Pastillas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_c Name="utiliza_c" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_d" Text="d. Inyecciones o ampolletas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_d Name="utiliza_d" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_e" Text="e. Implante anticonceptivo (subdérmico) o Norplant" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_e Name="utiliza_e" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_f" Text="f. Parche anticonceptivo" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_f Name="utiliza_f" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_g" Text="g. Anillo vaginal ( NuvaRing)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_g Name="utiliza_g" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_h" Text="h. DIU, dispositivo o aparato (de cobre)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_h Name="utiliza_h" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_i" Text="i. DIU, dispositivo con levornogestrel (Mirena)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_i Name="utiliza_i" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_j" Text="j. Condón o preservativo masculino" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_j Name="utiliza_j" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_k" Text="k. Condón o preservativo femenino" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_k Name="utiliza_k" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_l" Text="l. Óvulos, jaleas o espumas anticonceptivas" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_l Name="utiliza_l" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_m" Text="m. Ritmo, calendario, Billings o abstinencia periódica" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_m Name="utiliza_m" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_n" Text="n. Retiro o coito interrumpido" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_n Name="utiliza_n" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="utiliza_nn" Text="ñ. Píldora del día siguiente o anticoncepción de emergencia" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.metodos_utiliza_nn Name="utiliza_nn" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenTextBox @bind-Value="@crs.metodos_utiliza_o" Style="width: 100%; margin-top: 10px;" Placeholder="o. Otros métodos. ¿Cuál?" />
+                    </RadzenCard>
+                </RadzenCard>
+            }
+            @if (crs.metodos_utiliza_a == true || crs.metodos_utiliza_b == true)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Usted (o su pareja) se operó..." Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.anticon_operoId"
+                                    Data="@crs.anticon_opero"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    @if (crs.anticon_operoId == 5)
+                    {
+                        <RadzenTextBox @bind-Value="@crs.anticon_operootro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    }
+                </RadzenCard>
+            }
+            @if (crs.anticon_usoId == 1)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Dónde consiguió el método actual cuando lo empezó a usar?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.anticon_dondeId"
+                                    Data="@crs.anticon_donde"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    @if (crs.anticon_dondeId == 8)
+                    {
+                        <RadzenTextBox @bind-Value="@crs.anticon_dondeotro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    }
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cuáles son las razones principales por la que le recetaron (prescribieron) el método que utiliza actualmente?" Size="H3" class="rz-card-title" />
+
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_1" Text="Situación delicada de salud o recomendación médica" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_1 Name="anticon_razonreceta_1" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_2" Text="Me  pusieron un método (DIU) sin mi consentimiento" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_2 Name="anticon_razonreceta_2" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_3" Text="Me lo ofrecieron" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_3 Name="anticon_razonreceta_3" TValue="bool" />
+                    </RadzenCard> 
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_4" Text="Me lo pidió mi pareja" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_4 Name="anticon_razonreceta_4" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_5" Text="No había el método solicitado" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_5 Name="anticon_razonreceta_5" TValue="bool" />
+                    </RadzenCard>  
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_6" Text="Yo lo decidí" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_6 Name="anticon_razonreceta_6" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_7" Text="Me lo inidicó mi: Médico general" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_7 Name="anticon_razonreceta_7" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_8" Text="Me lo inidicó mi: Ginecólogo(a)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_8 Name="anticon_razonreceta_8" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_9" Text="Me lo inidicó mi: Reumatólogo(a)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_9 Name="anticon_razonreceta_9" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_10" Text="Me lo inidicó mi: Enfermero(a)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_10 Name="anticon_razonreceta_10" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_11" Text="Me lo inidicó mi: Otro personal de salud:" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_11 Name="anticon_razonreceta_11" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="anticon_razonreceta_12" Text="No responde" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.anticon_razonreceta_12 Name="anticon_razonreceta_12" TValue="bool" />
+                    </RadzenCard>
+                </RadzenCard>
+            }
+            @if (crs.anticon_usoId == 2)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cuál es la razón principal por la que actualmente no está utilizando algún método para evitar el embarazo?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.anticon_razonnousaId"
+                                    Data="@crs.anticon_razonnousa"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    @if (crs.anticon_razonnousaId == 21)
+                    {
+                        <RadzenTextBox @bind-Value="@crs.anticon_razonnousaotro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    }
+                </RadzenCard>
+            }
+        </RadzenCard>
+
+
+        @*Preferencias reproductivas*@
+        <RadzenLabel Text="SECCIÓN 6: PREFERENCIAS REPRODUCTIVAS" Size="H2" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Quisiera tener hijas(os) alguna vez en su vida" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@crs.hijosalgunavezId"
+                                Data="@crs.hijosalgunavez"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+            @if (crs.hijosalgunavezId == 1 || crs.hijosalgunavezId == 2)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Quisiera tener hijos (as) ahora o en el próximo año?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.hijosahoraId"
+                                    Data="@crs.hijosahora"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </RadzenCard>
+            }
+            @if (crs.hijosalgunavezId == 2)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Por qué no puede tener hijos (as) alguna vez en su vida?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.hijosnopuedeId"
+                                    Data="@crs.hijosnopuede"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    @if (crs.hijosnopuedeId == 8)
+                    {
+                        <RadzenTextBox @bind-Value="@crs.hijosnopuedeotro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    }
+                </RadzenCard>
+            }
+            @if (crs.hijosahoraId == 2)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Por qué no puede tener hijos (as) ahora o en el próximo año?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.hijosnorazonId"
+                                    Data="@crs.hijosnorazon"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    @if (crs.hijosnorazonId == 7)
+                    {
+                        <RadzenTextBox @bind-Value="@crs.hijosnorazonotro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    }
+                </RadzenCard>
+            }
+            @if (crs.hijosahoraId == 3)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Por qué no desea tener hijos (as) dentro del próximo año?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.hijosnodeseananoId"
+                                    Data="@crs.hijosnodeseanano"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    @if (crs.hijosnodeseananoId == 10)
+                    {
+                        <RadzenTextBox @bind-Value="@crs.hijosnodeseananootro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    }
+                </RadzenCard>
+            }
+            @if (crs.hijosalgunavezId == 3)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Por qué no desea tener hijos en algún momento de su vida?" Size="H3" class="rz-card-title" /> 
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.hijosnodeseanuncaId"
+                                    Data="@crs.hijosnodeseanunca"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    @if (crs.hijosnodeseanuncaId == 10)
+                    {
+                        <RadzenTextBox @bind-Value="@crs.hijosnodeseanuncaotro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                    }
+                </RadzenCard>
+            }
+            @if (crs.hijosalgunavezId == 1)
+            {
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cuántos años le gustaría esperar para tener un hijo(a) o varios más?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@crs.hijosesperaId"
+                                    Data="@crs.hijosespera"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </RadzenCard>
+                @if (crs.hijosesperaId == 4)
+                {
+                    <RadzenCard>
+                        <RadzenNumeric @bind-Value="@crs.hijosesperanum" Style="width: 100%" />
+                    </RadzenCard>
+                }
+            }
+        </RadzenCard>
+
+        @*FECUNDIDAD*@
+        <RadzenLabel Text="SECCIÓN 7: FECUNDIDAD E HISTORIA DE EMBARAZOS" Size="H2" class="rz-card-title" />
+        <RadzenCard>
+            <div class="row">
+                 <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Ha estado embarazada alguna vez? (Incluyendo abortos)" Component="embarazada" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                                @bind-Value="@crs.embarazadaId"
+                                Data="@crs.SiNol"
+                                Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+                </div>
+                @if (crs.embarazadaId==1)
+                {
+                     <div class="col-lg-6 col-xl-4 p-3">
+                        <RadzenCard>
+                            <RadzenLabel Text="¿Cuántas veces se ha embarazado?" Component="numembarazos" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenNumeric @bind-Value="@crs.numembarazos" Style="width: 100%" />
+                        </RadzenCard>
+                    </div>
+
+
+                    <RadzenCard>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">GESTAS</th>
+                                    <th scope="col">SEMANAS DE GESTACIÓN</th>
+                                    <th scope="col">GESTACIÓN</th>
+                                    <th scope="col">PARTO CESÁREA ABORTO</th>
+                                    <th scope="col">PESO (kg)</th>
+                                    <th scope="col">TALLA (cm)</th>
+                                    <th scope="col">HIJO VIVO</th>
+                                    <th scope="col">DEFUNCIÓN DEL PRODUCTO/ NEONATO	</th>
+                                    <th scope="col">DÍA DE NACIMIENTO</th>
+                                    <th scope="col">MES DE NACIMIENTO</th>
+                                    <th scope="col">AÑO DE NACIMIENTO</th>
+                                    <th scope="col">¿DÓNDE FUE ATENDIDA?</th>
+                                </tr>
+                                <tr>
+                                    <td>-</td>
+                                    <td>Si recuerda el número de semanas de gestación, anótelo con número.</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>Anote con número el peso del bebé. puede escribir valores con punto decimal</td>
+                                    <td>Anote con número la talla del bebé. puede escribir valores con punto decimal</td>
+                                    <td>Seleccione si su hijo falleció.</td>
+                                    <td>Señale la causa:</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                                {
+                                    @if(i<@crs.numembarazos)
+                                    {
+                                        int index = i;
+                                        <tr>
+                                            <td>embarazo número: @(i+1)</td>
+
+                                            <td> <RadzenNumeric @bind-Value="crs.PartosInfos[index].SemanasGestacion" Name="SemanasGestacion" /> </td>
+
+                                            <td>
+                                                <RadzenDropDown @bind-Value="@crs.PartosInfos[index].GestacionTipoId" 
+                                                                TextProperty="Key" 
+                                                                ValueProperty="Value"
+                                                                Data="crs.GestacionTipo" />
+                                                @*<button class="btn btn-danger" @onclick="(() => ClearSelection(v => crs.PartosInfos[index].GestacionTipoId = v))" @onclick:preventDefault>Limpiar</button>*@
+                                                <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].GestacionTipoId = v))" />
+                                            </td>
+
+                                            <td>
+                                                <RadzenDropDown @bind-Value="@crs.PartosInfos[index].PartoCesareaAbortoId"
+                                                                TextProperty="Key"
+                                                                ValueProperty="Value"
+                                                                Data="crs.PartoCesareaAborto" />
+                                                <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].PartoCesareaAbortoId = v))" />
+                                            </td>
+
+                                            <td> <RadzenNumeric @bind-Value="crs.PartosInfos[index].Peso" Name="Peso" /> </td>
+                                            <td> <RadzenNumeric @bind-Value="crs.PartosInfos[index].Talla" Name="Talla" /> </td>
+
+                                            <td><RadzenCheckBox @bind-Value="crs.PartosInfos[index].HijoVivo" Name="HijoVivo" TValue="bool" /></td>
+
+                                            <td>
+                                                <RadzenDropDown @bind-Value="@crs.PartosInfos[index].DefuncionId" Visible=@(crs.PartosInfos[index].HijoVivo) 
+                                                                TextProperty="Key"
+                                                                ValueProperty="Value"
+                                                                Data="crs.Defuncion" />
+                                                <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].DefuncionId = v))" />
+                                            </td>
+
+                                            <td> <RadzenNumeric @bind-Value="crs.PartosInfos[index].Dia" Name="DiaNacimiento" /> </td>
+                                            <td> <RadzenNumeric @bind-Value="crs.PartosInfos[index].Mes" Name="MesNacimiento" /> </td>
+                                            <td> <RadzenNumeric @bind-Value="crs.PartosInfos[index].Year" Name="AnioNacimiento" /> </td>
+
+                                            <td>
+                                                <RadzenDropDown @bind-Value="@crs.PartosInfos[index].AtendidaId" 
+                                                                TextProperty="Key"
+                                                                ValueProperty="Value"
+                                                                Data="crs.Atendida" />
+                                                <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].AtendidaId = v))" />
+                                            </td>
+
+                                        </tr>                                        
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </RadzenCard>   
+
+                    <div class="row"> 
+                        <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenCard>
+                                <RadzenLabel Text="De sus hijos(as) que nacieron vivos, ¿Cuántos han fallecido?" Component="hijosnacvivosfall" Style="margin-left: 8px; vertical-align: middle;" />
+                                <RadzenNumeric @bind-Value="@crs.hijosnacvivosfall" Style="width: 100%" />
+                            </RadzenCard>  
+                        </div>
+                    </div>
+                }  
+                <div class="row"> 
+                    <div class="col-lg-6 col-xl-4 p-3">
+                        <RadzenCard>
+                            <RadzenLabel Text="¿Cuántos hijos desea o planea tener en su vida?" Size="H3" class="rz-card-title" />
+                            <RadzenNumeric @bind-Value="@crs.numhijosdesea" Style="width: 100%" />
+                        </RadzenCard>
+                    </div>
+                </div>
+                @if (crs.embarazadaId==1)
+                {
+                    <div class="row"> 
+                        <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenCard>
+                                <RadzenLabel Text="En el momento que usted se embarazó de su último hijo(a)…" Component="ereumatica" Style="margin-left: 8px; vertical-align: middle;" />
+                                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                                @bind-Value="@crs.TipoEmbarazoId"
+                                                Data="@crs.TipoEmbarazo"
+                                                Style="width: 100%">
+                                </RadzenDropDown>
+                            </RadzenCard>
+                        </div>
+                    </div>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="Hasta el día de hoy, el número de hijos (as) que usted ha tenido han sido..." Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                                        @bind-Value="@crs.pnumhijosId"
+                                        Data="@crs.pnumhijos"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+                    @if (crs.pnumhijosId==1)
+                    {  
+                        <RadzenCard>
+                            <RadzenLabel Text="¿Cuál es la razón principal por la que ha tenido más hijos (as) de los que deseaba?" Size="H3" class="rz-card-title" />
+                            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                                            @bind-Value="@crs.rmashijosId"
+                                            Data="@crs.rmashijos"
+                                            Style="width: 100%">
+                            </RadzenDropDown>
+                        </RadzenCard>
+                    }
+                    @if (crs.pnumhijosId==3)
+                    {  
+                        <RadzenCard>
+                            <RadzenLabel Text="¿Cuál es la razón principal por la que ha tenido menos hijos (as) de los que deseaba?" Size="H3" class="rz-card-title" />
+                            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                                            @bind-Value="@crs.rmenoshijosId"
+                                            Data="@crs.rmenoshijos"
+                                            Style="width: 100%">
+                            </RadzenDropDown>
+                        </RadzenCard>
+                    }
+                }
+            </div>
+        </RadzenCard>
+
+         @*LACTANCIA*@
+         @if (crs.embarazadaId==1)
+         {
+            <RadzenLabel Text="SECCIÓN 8: PUERPERIO Y LACTANCIA (ESTAS PREGUNTAS ESTÁN DIRIGIDAS SOLO A LAS MUJERES CON ANTECEDENTES DE EMBARAZO Y PRODUCTOS VIVOS)" Size="H2" class="rz-card-title" />
+            <RadzenCard>
+                <div class="row">
+                     <div class="col-lg-6 col-xl-4 p-3">
+                            <RadzenCard>
+                                <RadzenLabel Text="Durante sus embarazos, la decisión de la vía de nacimiento (parto o cesárea) se decidió….   " Size="H3" class="rz-card-title" />
+                                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                                                @bind-Value="@crs.vianac_decidioId"
+                                                Data="@crs.vianac_decidio"
+                                                Style="width: 100%">
+                                </RadzenDropDown>
+                            </RadzenCard>
+                     </div>
+                </div>
+            </RadzenCard>
+
+            <div class="row justify-content-center">
+                <RadzenCard>
+                    <RadzenLabel Text="¿Qué medicamentos tomó después del nacimiento (parto o cesárea) de su bebé?" Size="H4" class="rz-card-title" />
+                    <p>
+                        <RadzenLabel Text="(Se puede circular más de una respuesta)" />
+                        <RadzenLabel Text="(Entre paréntesis puede ver los nombres comerciales más comunes)" />
+                    </p>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_1" Text="Metotrexato" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_1 Name="partomedicamento_1" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_2" Text="Mofetil micofenolato/Acido micofenólico	" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_2 Name="partomedicamento_2" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_3" Text="Ciclofosfamida (Genoxal)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_3 Name="partomedicamento_3" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_4" Text="Talidomida" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_4 Name="partomedicamento_4" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_5" Text="Leflunomida (Arava, Almura, Filarin o Galdione)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_5 Name="partomedicamento_5" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_6" Text="Sulfasalazina (Azulfidina)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_6 Name="partomedicamento_6" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_7" Text="Rituximab (Mabthera)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_7 Name="partomedicamento_7" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_8" Text="Belimumab (Benlystia)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_8 Name="partomedicamento_8" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_9" Text="Azatioprina (Inmuran o Azatrilem)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_9 Name="partomedicamento_9" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_10" Text="Cloroquina (Aralen)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_10 Name="partomedicamento_10" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_11" Text="Hidroxicloroquina (Plaquenil, Himanix o Himanex)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_11 Name="partomedicamento_11" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_12" Text="Prednisona (Meticorten o Deflazacort" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_12 Name="partomedicamento_12" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_13" Text="Tacrolimus (Prograf)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_13 Name="partomedicamento_13" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_14" Text="Ácido fólico (Folivital) " Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_14 Name="partomedicamento_14" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_15" Text="Vitamina D	" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_15 Name="partomedicamento_15" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_16" Text="Ninguno" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_16 Name="partomedicamento_16" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_17" Text="Deflazacort" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_17 Name="partomedicamento_17" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_18" Text="Enoxaparina (Bolentax, Clexane)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_18 Name="partomedicamento_18" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_19" Text="Acenocumarina" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_19 Name="partomedicamento_19" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_20" Text="Aspirina" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_20 Name="partomedicamento_20" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_21" Text="Infliximab (Remicade)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_21 Name="partomedicamento_21" TValue="bool" />
+                    </RadzenCard>
+                        <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_22" Text="Etarnecept (Enbrel)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_22 Name="partomedicamento_22" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_23" Text="Adalimumab (Humira)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_23 Name="partomedicamento_23" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_24" Text="Certolizumab pegol (Cimzia)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_24 Name="partomedicamento_24" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_25" Text="Golimumab (Simponi)" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_25 Name="partomedicamento_25" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_26" Text="Tocilizumab" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_26 Name="partomedicamento_26" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_27" Text="Tofacitinib" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_27 Name="partomedicamento_27" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_28" Text="Baricitinib" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_28 Name="partomedicamento_28" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_29" Text="Abatacept" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_29 Name="partomedicamento_29" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_30" Text="Ixekizumab" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_30 Name="partomedicamento_30" TValue="bool" />
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Component="partomedicamento_otros" Text="Otros" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@crs.partomedicamento_otros Name="partomedicamento_otros" TValue="bool" />
+                    </RadzenCard>
+                    @if (crs.partomedicamento_otros)
+                    {
+                        <RadzenCard>
+                            <RadzenTextBox @bind-Value="@crs.partomedicamento_otros_text" Style="width: 100%; margin-top: 10px;" Placeholder="Otros" />
+                        </RadzenCard>
+                    }
+                </RadzenCard>
+            </div>
+
+
+             <RadzenCard>
+                <RadzenLabel Text="En caso de nacimiento por cesárea, especifique la razón de esta decisión:" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Razón de esta decisión></th>
+                            <th scope="col">Especifiqué </th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if(i<@crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].CesareaMotivoId"
+                                                        TextProperty="Key" 
+                                                        ValueProperty="Value"
+                                                        Data="crs.CesareaRazones" />
+                                    <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].CesareaMotivoId = v))" />
+                                    </td>
+                                    <td><RadzenTextBox @bind-Value="@crs.PartosInfos[index].CesareaOtros" Visible=@(crs.PartosInfos[index].CesareaMotivoId==8) /></td>
+                                </tr>                                        
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="Su enfermedad, ¿se reactivó después del parto?" Size="H4" class="rz-card-title" />
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">GESTAS</th>
+                                <th scope="col">Repuesta</th>
+                            </tr>
+                            <tr>
+                                <td>-</td>
+                                <td>
+                                    Marque si la respuesta es afirmativa
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if(i<@crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td><input type="checkbox" @bind="@crs.PartosInfos[index].Reactivo" /></td>
+                                </tr>                                        
+                            }
+                        }
+                    </tbody>
+                    </table>
+                </div>   
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="Durante su embarazo, ¿recibió información acerca de la lactancia?" Size="H4" class="rz-card-title" />
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">GESTAS</th>
+                                <th scope="col">Repuesta</th>
+                            </tr>
+                            <tr>
+                                <td>-</td>
+                                <td>
+                                    Marque si la respuesta es afirmativa
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if(i<@crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td><input type="checkbox" @bind="@crs.PartosInfos[index].InfoLactancia" /></td>
+                                </tr>                                        
+                            }
+                        }
+                    </tbody>
+                    </table>
+                </div>   
+            </RadzenCard>
+
+             <RadzenCard>
+                <RadzenLabel Text="Sitio donde recibió dicha información:" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Sitio></th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if(i<@crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].SitioInfoLactanciaId"
+                                                        TextProperty="Key" 
+                                                        ValueProperty="Value"
+                                                        Data="crs.SitioInfoLactancia" />
+                                        <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].SitioInfoLactanciaId = v))" />
+                                    </td>
+                                </tr>                                        
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="Antes del parto, usted ¿Deseaba darle pecho a su bebe?" Size="H4" class="rz-card-title" />
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">GESTAS</th>
+                                <th scope="col">Repuesta</th>
+                            </tr>
+                            <tr>
+                                <td>-</td>
+                                <td>
+                                    Marque si la respuesta es afirmativa
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                            {
+                                @if(i<@crs.numembarazos)
+                                {
+                                    int index = i;
+                                    <tr>
+                                        <td>embarazo número: @(i+1)</td>
+                                            <td><input type="checkbox" @bind="@crs.PartosInfos[index].DarPechoAntes" /></td>
+                                    </tr>                                        
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>   
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Por qué?, indique la razón de ello:" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Razón></th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if (i < @crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].DarPechoAntesRazonId"
+                                                        TextProperty="Key"
+                                                        ValueProperty="Value"
+                                                        Data="crs.DarPechoAntesRazon" />
+                                        <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].DarPechoAntesRazonId = v))" />
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="Antes del parto de su bebé, ¿Cómo pensaba alimentarlo?:" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Razón></th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if (i < @crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].PensabaAlimentarloId"
+                                                        TextProperty="Key"
+                                                        ValueProperty="Value"
+                                                        Data="crs.PensabaAlimentarlo" />
+                                        <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].PensabaAlimentarloId = v))" />
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="Después del parto de su hijo(a),:" Size="H4" class="rz-card-title" />
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">GESTAS</th>
+                                <th scope="col">¿Pusieron en contacto directo con su piel durante las dos primeras horas de nacido al bebe?</th>
+                                <th scope="col">¿Le dió pecho durante las dos primeras horas de nacido al bebé?</th>
+                                <th scope="col">¿El bebé tuvo algún problema que ameritó que lo separaran de usted?      </th>
+                                <th scope="col">¿Le explicaron cómo darle pecho a su bebé?</th>
+                                <th scope="col">¿Le ayudaron a darle pecho a su bebé?</th>
+                                <th scope="col">¿Le recomendaron algún método anticonceptivo?</th>
+                            </tr>
+                            <tr>
+                                <td>Marque si la respuesta es afirmativa</td>
+                                <td>Marque si la respuesta es afirmativa</td>
+                                <td>Marque si la respuesta es afirmativa</td>
+                                <td>Marque si la respuesta es afirmativa</td>
+                                <td>Marque si la respuesta es afirmativa</td>
+                                <td>Marque si la respuesta es afirmativa</td>
+                                <td>Marque si la respuesta es afirmativa</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                            {
+                                @if (i < @crs.numembarazos)
+                                {
+                                    int index = i;
+                                    <tr>
+                                        <td>embarazo número: @(i+1)</td>
+                                        <td><input type="checkbox" @bind="@crs.PartosInfos[index].DespuesParto1" /></td>
+                                        <td><input type="checkbox" @bind="@crs.PartosInfos[index].DespuesParto2" /></td>
+                                        <td><input type="checkbox" @bind="@crs.PartosInfos[index].DespuesParto3" /></td>
+                                        <td><input type="checkbox" @bind="@crs.PartosInfos[index].DespuesParto4" /></td>
+                                        <td><input type="checkbox" @bind="@crs.PartosInfos[index].DespuesParto5" /></td>
+                                        <td><input type="checkbox" @bind="@crs.PartosInfos[index].DespuesParto6" /></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Cómo alimentó a su bebé durante los primeros 6 meses?" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Respuesta></th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if (i < @crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i + 1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].AlimentoBebesmId"
+                                                        TextProperty="Key"
+                                                        ValueProperty="Value"
+                                                        Data="crs.AlimentoBebesm" />
+                                        <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].AlimentoBebesmId = v))" />                                     
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Porqué eligió este tipo de alimentación?" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Respuesta></th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if (i < @crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].EligioTipoAlimId"
+                                                        TextProperty="Key"
+                                                        ValueProperty="Value"
+                                                        Data="crs.EligioTipoAlim" />
+                                        <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].EligioTipoAlimId = v))" />
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="Si le dio leche materna después de nacido, ¿cuánto tiempo pasó para que empezara a lactar o darle pecho a su bebé?" Size="H4" class="rz-card-title" />
+                <p><RadzenLabel Text="ANOTE UNA SOLA RESPUESTA." Size="H6" class="rz-card-title" /> </p>
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">GESTAS</th>
+                                <th scope="col">Minutos </th>
+                                <th scope="col">Horas</th>
+                                <th scope="col">Días</th>
+                            </tr>
+                            <tr>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                            {
+                                @if (i < @crs.numembarazos)
+                                {
+                                    int index = i;
+                                    <tr>
+                                        <td>embarazo número: @(i + 1)</td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].MinutosDesp" Name="Minutos" /></td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].HorasDesp" Name="Horas" /></td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].DiasDesp" Name="Dias" /></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Durante cuánto tiempo le dio a su hijo(a) leche materna o pecho exclusivo?" Size="H4" class="rz-card-title" />
+                <p><RadzenLabel Text="ANOTE UNA SOLA RESPUESTA." Size="H6" class="rz-card-title" /> </p>
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">GESTAS</th>
+                                <th scope="col">Minutos </th>
+                                <th scope="col">Horas</th>
+                                <th scope="col">Días</th>
+                                <th scope="col">Meses </th>
+                                <th scope="col">Años</th>
+                            </tr>
+                            <tr>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                            {
+                                @if (i < @crs.numembarazos)
+                                {
+                                    int index = i;
+                                    <tr>
+                                        <td>embarazo número: @(i + 1)</td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].MinutosTotales" Name="Minutos" /></td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].HorasTotales" Name="Horas" /></td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].DiasTotales" Name="Dias" /></td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].MesesTotales" Name="Meses" /></td>
+                                        <td><RadzenNumeric @bind-Value="crs.PartosInfos[index].AniosTotales" Name="Anos" /></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </RadzenCard>
+
+
+             <RadzenCard>
+                <RadzenLabel Text="¿Por qué dejó de darle pecho/leche materna a su hija(o)?" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Razón de esta decisión></th>
+                            <th scope="col">Especifiqué </th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if(i<@crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i+1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].DejoDarleLechePechoId"
+                                                        TextProperty="Key" 
+                                                        ValueProperty="Value"
+                                                        Data="crs.DejoDarleLechePecho" />
+                                        <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].DejoDarleLechePechoId = v))" />
+                                    </td>
+                                    <td><RadzenTextBox @bind-Value="@crs.PartosInfos[index].DejoDarleLechePechoOtros" Visible=@(crs.PartosInfos[index].DejoDarleLechePechoId==13) /></td>
+                                </tr>                                        
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+
+             <RadzenCard>
+                <RadzenLabel Text="En caso de haber alimentado solamente con fórmula a su bebé durante los primeros 6 meses, ¿Por qué no le dió pecho?" Size="H4" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">GESTAS</th>
+                            <th scope="col">Razón de esta decisión></th>
+                            <th scope="col">Especifiqué </th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < crs.PartosInfos.Count; i++)
+                        {
+                            @if(i<@crs.numembarazos)
+                            {
+                                int index = i;
+                                <tr>
+                                    <td>embarazo número: @(i + 1)</td>
+                                    <td>
+                                        <RadzenDropDown @bind-Value="@crs.PartosInfos[index].NuncaLechePechoId"
+                                                        TextProperty="Key" 
+                                                        ValueProperty="Value"
+                                                        Data="crs.NuncaLechePecho" />
+                                        <RadzenButton Text="Limpiar" Click="@(() => ClearSelection(v => crs.PartosInfos[index].NuncaLechePechoId = v))" />
+                                    </td>
+                                    <td><RadzenTextBox @bind-Value="@crs.PartosInfos[index].NuncaLechePechoOtros" Visible=@(crs.PartosInfos[index].NuncaLechePechoId==12) /></td>
+                                </tr>                                        
+                            }
+                        }
+                    </tbody>
+                </table>
+            </RadzenCard>
+        }
+
+    </div>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px;">
+                <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Guardar" />
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancelar" Click="@Cancel" />
+                <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="delete" style="display: inline-block; margin-left: 10px;" Text="Borrar" Click="@Delete" />
+
+            </div>
+        </div>
+    </div>
+</RadzenTemplateForm>
+
+<style>
+  .rz-card-title {
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 18px;
+  }
+</style>
+
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    [Parameter]
+    public int? Idc { get; set; }
+    ERep.Models.Patient patient = new ERep.Models.Patient();
+    ERep.Models.CSR crs = new ERep.Models.CSR();
+
+    string btnText = string.Empty;
+    string ArticulacionesbtnText = string.Empty;
+    bool OkayDisabled = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Idc == null ? "Guardar nuevo paciente" : "Actualizar paciente";
+        await PatientService.LoadStates();
+        if (Idc == null)
+            OkayDisabled = false;
+
+        for (int i = 0; i < 20; i++)
+        {
+            var PartosInfo = new ERep.Models.PartosInfo();
+            PartosInfo.CSRId = crs.Id;
+            PartosInfo.SemanasGestacion=0;
+            PartosInfo.GestacionTipoId=0;
+            PartosInfo.Peso=0;
+            PartosInfo.Talla=0;
+            PartosInfo.HijoVivo=false;
+            PartosInfo.DefuncionId=0;
+            PartosInfo.Dia=0;
+            PartosInfo.Mes=0;
+            PartosInfo.Year=0;
+            PartosInfo.AtendidaId=0;
+
+            //var CesareaMotivo = new ERep.Models.CesareaMotivo();
+            PartosInfo.CesareaMotivoId = 0;
+            PartosInfo.CesareaOtros = string.Empty;
+
+            //reactivo
+            PartosInfo.Reactivo = false;
+
+            PartosInfo.InfoLactancia = false;
+            PartosInfo.SitioInfoLactanciaId = 0;
+
+            PartosInfo.DarPechoAntes = false;
+
+            PartosInfo.DarPechoAntesRazonId = 0;
+
+            PartosInfo.PensabaAlimentarloId = 0;
+
+            PartosInfo.DespuesParto1 = false;
+            PartosInfo.DespuesParto2 = false;
+            PartosInfo.DespuesParto3 = false;
+            PartosInfo.DespuesParto4 = false;
+            PartosInfo.DespuesParto5 = false;
+            PartosInfo.DespuesParto6 = false;
+
+            PartosInfo.AlimentoBebesmId = 0;
+
+            PartosInfo.EligioTipoAlimId = 0;
+
+            PartosInfo.MinutosDesp = 0;
+            PartosInfo.HorasDesp = 0;
+            PartosInfo.DiasDesp = 0;
+
+            PartosInfo.MinutosTotales = 0;
+            PartosInfo.HorasTotales = 0;
+            PartosInfo.DiasTotales = 0;
+            PartosInfo.MesesTotales = 0;
+            PartosInfo.AniosTotales = 0;
+
+            PartosInfo.DejoDarleLechePechoId = 0;
+            PartosInfo.DejoDarleLechePechoOtros = string.Empty;
+
+            PartosInfo.NuncaLechePechoId = 0;
+            PartosInfo.NuncaLechePechoOtros = string.Empty;
+
+            crs.PartosInfos.Add(PartosInfo);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Idc == null)
+        {
+            patient.CSRs = PatientService.CSRs;
+        }
+        else
+        {
+            patient = await PatientService.GetSinglePatient((int)Id);
+            crs = await PatientService.GetSingleCSR((int)Id, (int)Idc);
+        }
+    }
+
+
+    async void Onsubmit(ERep.Models.CSR csr)
+    {
+        if (Idc == null)
+        {
+            crs.PatientId = (int)Id;
+            await PatientService.CreateCSR(crs, (int)Id);
+        }
+        else
+        {
+            await PatientService.UpdateCSR(crs, (int)Id, (int)Idc);
+            //await PatientService.UpdateCaseQuestions(crs.caseQuestions,(int)Id);
+        }
+
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"/csr/{Id}");
+    }
+
+    async void Delete()
+    {
+        if(Idc != null)
+            await PatientService.DeleteCSR(crs, (int)Id, (int)Idc);
+    }
+
+
+    private void ClearSelection(Action<int> setValue)
+    {
+        setValue(0);
+    }
+}

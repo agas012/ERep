@@ -1,0 +1,68 @@
+﻿@page "/patients"
+@inject ERep.Data.IPatientService PatientService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Pacientes</PageTitle>
+
+<h3>Pacientes</h3>
+
+@if (PatientService.Patients == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <RadzenDataGrid Data="@PatientService.Patients" TItem="ERep.Models.Patient" AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Simple" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or">
+        <Columns>
+            <RadzenDataGridColumn TItem="ERep.Models.Patient" Property="Iniciales" Title="Iniciales" Filterable="true" Width="80px" TextAlign="TextAlign.Center" Frozen="true">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ERep.Models.Patient" Property="Folio" Title="Folio" Filterable="true" Width="80px" TextAlign="TextAlign.Center" Frozen="false"></RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ERep.Models.Patient" Property="Date" Title="Dado de alta" Type="typeof(DateTime)" Width="80px" TextAlign="TextAlign.Center">
+                <Template Context="data">
+                    @data.Date.ToShortDateString()
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ERep.Models.Patient" Property="ECU" Title="Registro" Filterable="true" Width="80px" TextAlign="TextAlign.Center" Frozen="false"></RadzenDataGridColumn>
+            @*<RadzenDataGridColumn TItem="ERep.Models.Patient" Property="State.Name" Title="Estado procedencia" Filterable="true" Width="80px" TextAlign="TextAlign.Center" Frozen="false"></RadzenDataGridColumn>*@
+            <RadzenDataGridColumn TItem="ERep.Models.Patient" Context="data" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="20px" Frozen="true">
+                <Template Context="data">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(() => ShowPatient(data.Id))">
+                    </RadzenButton>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+
+    <div class="container-fluid">
+        <div class="row justify-content-center" style="background-color: #20c997">
+            <div class="col-lg-4 col-xl-3 p-3">
+                <RadzenButton Icon="list" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(CreatePatient) Text="Crear nuevo paciente" Style="width:200px" TextAlign="TextAlign.Center"/>
+        
+            </div>
+            <div class="col-lg-4 col-xl-3 p-3">
+                <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(Cancel) Text="Cancelar" Style="width:200px" TextAlign="TextAlign.Center" />
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await PatientService.LoadPatients();
+    }
+    void ShowPatient(int id)
+    {
+        NavigationManager.NavigateTo($"patient/{id}");
+    }
+    void CreatePatient()
+    {
+        NavigationManager.NavigateTo($"patient");
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"/");
+    }
+}

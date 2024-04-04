@@ -1,0 +1,305 @@
+﻿@page "/patient"
+@page "/patient/{id:int}"
+@inject ERep.Data.IPatientService PatientService
+@inject NavigationManager NavigationManager
+
+@if (Id == null)
+{
+        <PageTitle>Crear un nuevo paciente</PageTitle>
+        <h3>Crear un nuevo paciente</h3>
+}
+else
+{
+    <PageTitle>Editar @patient.Iniciales @patient.Folio @patient.ECU</PageTitle>
+    <h3>Paciente: @patient.Iniciales, Folio: @patient.Folio @patient.ECU</h3>
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center" style="background-color: #6610f2">
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(ShowData) Text="Mostar forma de llenado" Style="width:200px" TextAlign="TextAlign.Center" />
+        </div>
+    </div>
+</div>
+
+
+@if (!OkayDisabled)
+{
+    <RadzenTemplateForm Data=@patient TItem="ERep.Models.Patient" Submit="@Onsubmit">
+        <div class="container-fluid">
+            <div class="row" style="background-color: #0d6efd">
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Sí, he leído y entiendo la información y acepto participar" Component="aceptoconocimieto" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenCheckBox @bind-Value=@patient.aceptoconocimieto Name="aceptoconocimieto" TValue="bool" />
+                        <RadzenRequiredValidator Component="aceptoconocimieto" Text="Es necesario el consentimiento" Popup="true" Style="position: absolute" />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Iniciales" Component="Iniciales" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenTextBox @bind-Value=@patient.Iniciales Name="Iniciales"/>
+                        <RadzenRequiredValidator Component="Iniciales" Text="Las iniciales son necesarias" Popup="true" Style="position: absolute" />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Folio" Component="Folio" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenTextBox @bind-Value=@patient.Folio Name="Folio" />
+                        <RadzenRequiredValidator Component="Folio" Text="El folio es necesario" Popup="true" Style="position: absolute" />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Fecha de la captura:" Component="Date" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDatePicker @bind-Value=@patient.Date Name="Date" ShowTime="false" ShowSeconds="false" HoursStep="1.0" MinutesStep="5" SecondsStep="10" DateFormat="dd/MM/yyyy" Class="w-100" />
+                    </RadzenCard>
+                </div>
+             </div>
+            <div class="row">
+                <div class="col-lg-6 col-xl-4 p-3">
+                        <RadzenCard>
+                        <RadzenLabel Text="Registro" Component="ECU" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenTextBox @bind-Value=@patient.ECU Name="ECU"/>
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Fecha nacimiento" Component="BornDate" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDatePicker @bind-Value=@patient.BornDate Name="BornDate" ShowTime="false" ShowSeconds="false" HoursStep="1.0" MinutesStep="5" SecondsStep="10" DateFormat="dd/MM/yyyy" Class="w-100" Change=@BDatechange />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Edad" Component="Age" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenNumeric @bind-Value=@patient.Age Name="Age" ReadOnly="true" />
+                    </RadzenCard>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Sexo" Component="sexo" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@patient.sexoId"
+                                        Data="@patient.sexo"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Genero" Component="genero" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@patient.generoId"
+                                        Data="@patient.genero"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Código postal" Component="PostalCode" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenTextBox @bind-Value=@patient.PostalCode Name="PostalCode" />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Teléfono" Component="Phone" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenTextBox @bind-Value=@patient.Phone Name="Phone" />
+                        <RadzenRegexValidator Component="Phone" Text="El telefono debe de tener 10 digitos" Pattern="\d{10}" Popup="true" Style="position: absolute" />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Email" Component="Email" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenTextBox @bind-Value=@patient.Email Name="Email" />                  
+                        <RadzenEmailValidator Component="Email" Text="El correo tiene un formato erroneo" Popup="true" Style="position: absolute" />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Estado civil" Component="estadocivil" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenRadioButtonList @bind-Value=@patient.estadocivil TValue="int" Orientation=Orientation.Vertical class="mb-5">
+                            <Items>
+                                <RadzenRadioButtonListItem Text="Soltero/a" Value="1" />
+                                <RadzenRadioButtonListItem Text="Casado/a" Value="2" />
+                                <RadzenRadioButtonListItem Text="Unión libre" Value="3" />
+                                <RadzenRadioButtonListItem Text="Separado(a) / Divorciado (a)" Value="4" />
+                                <RadzenRadioButtonListItem Text="Viudo (a)" Value="5" />
+                                <RadzenRadioButtonListItem Text="Otro" Value="6" />
+                            </Items>
+                        </RadzenRadioButtonList>
+                        @if (patient.estadocivil == 6)
+                        {
+                            <RadzenTextBox @bind-Value="@patient.estadocivilotro" Style="width: 100%; margin-top: 10px;" Placeholder="Otro" />
+                        }
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Pareja actual" Component="CurrentPartner" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDropDown AllowClear="true" TValue="Models.SiNo" Class="w-100" Data="@Enum.GetValues(typeof(Models.SiNo))" @bind-Value="patient.CurrentPartner" />
+                    </RadzenCard>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Vive en zona:" Component="Residencia" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenDropDown AllowClear="true" TValue="Models.Residencia" Class="w-100" Data="@Enum.GetValues(typeof(Models.Residencia))" @bind-Value="patient.Residencia" />
+                    </RadzenCard>
+                </div>
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="Lugar de residencia (escriba el municipio)" Component="Residencialugar" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenTextBox @bind-Value=@patient.Residencialugar Name="Residencialugar" />
+                    </RadzenCard>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 col-xl-4 p-3">
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Cuál es su nivel máximo de estudios y el último año que estubo en la escuela?" Component="escolaridad" Style="margin-left: 8px; vertical-align: middle;" />
+                        <RadzenRadioButtonList @bind-Value=@patient.escolaridad TValue="int" Orientation=Orientation.Vertical class="mb-5">
+                            <Items>
+                                <RadzenRadioButtonListItem Text="Ninguno" Value="1" />
+                                <RadzenRadioButtonListItem Text="Lee y escribe" Value="2" />
+                                <RadzenRadioButtonListItem Text="Primaria" Value="3" />
+                                <RadzenRadioButtonListItem Text="Secundaria" Value="4" />
+                                <RadzenRadioButtonListItem Text="Preparatoria o Bachillerato" Value="5" />
+                                <RadzenRadioButtonListItem Text="Carrera tecnica" Value="6" />
+                                <RadzenRadioButtonListItem Text="Profesional" Value="7" />
+                                <RadzenRadioButtonListItem Text="Posgrado" Value="8" />
+                            </Items>
+                        </RadzenRadioButtonList>
+                        @if (patient.escolaridad > 2)
+                        {
+                            <RadzenLabel Text="# de años cursados en su ultimo nivel de estudios:" Component="escolaridadanos" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenNumeric @bind-Value="@patient.escolaridadanos" Style="width: 100%; margin-top: 10px;" Placeholder="# de años cursados" />
+                        }
+                        @if (patient.escolaridad > 5)
+                        {
+                            <RadzenLabel Text="¿en qué?" Component="escolaridadtipo" Style="margin-left: 8px; vertical-align: middle;" />
+                            <RadzenTextBox @bind-Value="@patient.escolaridadtipo" Style="width: 100%; margin-top: 10px;" Placeholder="#¿en qué? " />
+                        }
+                    </RadzenCard>
+                </div>
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(patient.Iniciales))
+        {
+            <button type="submit" class="btn btn-primary">@btnText</button>
+            @if (!(patient.Id == 0))
+            {
+                <button type="button" class="btn btn-danger" @onclick="DeletePatient">Borrar Paciente</button>
+            }
+        }
+    </RadzenTemplateForm>
+}
+
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-4 col-xl-3 p-3">
+            @if (Id != null)
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Filled" Size="ButtonSize.Medium" Click="@(() => ShowCSR(patient.Id))" Text="Encuesta" Style="width:200px" TextAlign="TextAlign.Center" />
+            }
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(Cancel) Text="Cancelar" Style="width:200px" TextAlign="TextAlign.Center" />
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    ERep.Models.Patient patient = new ERep.Models.Patient();
+
+    string btnText = string.Empty;
+    string ArticulacionesbtnText = string.Empty;
+    bool OkayDisabled = true;
+    int age;
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Guardar nuevo paciente" : "Actualizar paciente";
+        await PatientService.LoadStates();
+
+        var birthday = patient.BornDate;
+        var today = DateTime.Today;
+        age = today.Year - birthday.Year;
+        if (birthday > today.AddYears(-age))
+            age--;
+        patient.Age = age;
+
+        if (Id == null)
+            OkayDisabled = false;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            patient.State = PatientService.States[0];
+            patient.StateId = patient.State.Id;
+        }
+        else
+        {
+            patient = await PatientService.GetSinglePatient((int)Id);
+        }
+    }
+
+    async void Onsubmit(ERep.Models.Patient patient)
+    {
+        if (Id == null)
+        {
+            await PatientService.CreatePatient(patient);
+        }
+        else
+        {
+            await PatientService.UpdatePatient(patient, patient.Id);
+        }
+
+    }
+
+    async Task DeletePatient()
+    {
+        await PatientService.DeletePatient(patient.Id);
+    }
+
+    void ShowCSR(int id)
+    {
+        NavigationManager.NavigateTo($"csr/{id}");
+    }
+    async Task ShowData()
+    {
+        if (OkayDisabled == true)
+            OkayDisabled = false;
+        else
+            OkayDisabled = true;
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"patients");
+    }
+
+    void BDatechange()
+    {
+        var birthday = patient.BornDate;
+        var today = DateTime.Today;
+        age = today.Year - birthday.Year;
+        if (birthday > today.AddYears(-age))
+            age--;
+        patient.Age = age;
+    }
+}
